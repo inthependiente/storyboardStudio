@@ -59,6 +59,9 @@ export default function App() {
 
   // Verificar sesión al montar
   useEffect(() => {
+    // Debug: mostrar qué URL de Supabase se está usando
+    console.log('🔍 Supabase URL configurada:', import.meta.env.VITE_SUPABASE_URL || 'NO DEFINIDA')
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
       setAuthLoading(false)
@@ -98,7 +101,10 @@ export default function App() {
       if (error) throw error
     } catch (err) {
       if (err.message === 'Failed to fetch') {
-        setLoginError('Error de conexión con el servidor. Verifica que el dominio de GitHub Pages esté permitido en Supabase (Authentication → Settings → Allowed URLs).')
+        setLoginError(`Error de conexión con Supabase. Revisa la consola del navegador (F12) para más detalles.
+Posibles causas:
+1️⃣ En Supabase: Project Settings → API → agrega "https://${window.location.hostname}" en Allowed Origins
+2️⃣ Los secrets de GitHub no se inyectaron correctamente en el build`)
       } else {
         setLoginError(err.message)
       }
