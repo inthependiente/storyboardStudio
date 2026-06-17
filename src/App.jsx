@@ -163,6 +163,7 @@ Si ves "NO DEFINIDA", el archivo .env no se creó correctamente en el build de G
       setStoryboards(data || [])
     } catch (e) {
       console.error('Error cargando storyboards:', e.message)
+      alert(`Error al cargar storyboards: ${e.message}\n\nPosible causa: RLS en Supabase. Ve a Authentication → Policies y agrega una política SELECT para la tabla "storyboards".`)
     } finally {
       setLoading(false)
     }
