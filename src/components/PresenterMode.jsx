@@ -1,7 +1,17 @@
 import React, { useState } from 'react'
 import { LayoutGrid, Grid3X3, Film, MonitorPlay, ChevronLeft, ChevronRight, EyeOff, X } from 'lucide-react'
 
-export default function PresenterMode({ storyboardName, panels, locutions, onClose }) {
+export default function PresenterMode({
+  storyboardName,
+  panels,
+  locutions,
+  storyboards = [],
+  activeStoryboardId,
+  projectColors = { color_cliente: '#a78bfa', color_campana: '#34d399' },
+  isAuthenticated = false,
+  onSwitchStoryboard,
+  onClose
+}) {
   const [layoutMode, setLayoutMode] = useState(6) // default is 6 panels per page grid
   const [activeSlideIndex, setActiveSlideIndex] = useState(0) // for layout 1 (slide show)
   const [activeLightboxPanel, setActiveLightboxPanel] = useState(null)
@@ -14,14 +24,35 @@ export default function PresenterMode({ storyboardName, panels, locutions, onClo
     setActiveSlideIndex(prev => Math.min(panels.length - 1, prev + 1))
   }
 
+  const handleStoryboardChange = (e) => {
+    const sbId = parseInt(e.target.value, 10)
+    const sb = storyboards.find(s => s.id === sbId)
+    if (sb && onSwitchStoryboard) {
+      onSwitchStoryboard(sb)
+    }
+  }
+
   return (
     <div className="fixed inset-0 bg-slate-950 text-slate-100 z-50 overflow-y-auto flex flex-col">
       {/* Header de Presentación */}
-      <header className="sticky top-0 bg-slate-900 border-b border-slate-800 px-6 py-4 flex flex-wrap justify-between items-center gap-4 shadow-lg">
-        <div>
+      <header className="sticky top-0 z-10 bg-slate-900 border-b border-slate-800 px-6 py-4 flex flex-wrap justify-between items-center gap-4 shadow-lg">
+        <div className="flex items-center gap-3">
           <h1 className="text-xl font-bold tracking-tight text-white m-0">
-            {storyboardName} <span className="text-xs font-normal text-slate-400 bg-slate-800 px-2 py-0.5 rounded ml-2 border border-slate-700">Modo Rodaje / Vista de Solo Lectura</span>
+            {storyboardName}
           </h1>
+          {storyboards.length > 1 && (
+            <select
+              value={activeStoryboardId || ''}
+              onChange={handleStoryboardChange}
+              className="bg-slate-800 border border-slate-700 rounded-lg text-slate-200 text-xs px-2.5 py-1.5 outline-none cursor-pointer focus:border-purple-500"
+            >
+              {storyboards.map((sb) => (
+                <option key={sb.id} value={sb.id}>
+                  {sb.name}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
 
         {/* Controles de Vista */}
@@ -61,13 +92,15 @@ export default function PresenterMode({ storyboardName, panels, locutions, onClo
             </button>
           </div>
 
-          <button
-            onClick={onClose}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 active:bg-slate-900 border border-slate-750 text-xs font-semibold rounded-lg text-slate-300 cursor-pointer transition"
-          >
-            <EyeOff size={14} />
-            Salir del Modo Vista
-          </button>
+          {isAuthenticated && (
+            <button
+              onClick={onClose}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 active:bg-slate-900 border border-slate-750 text-xs font-semibold rounded-lg text-slate-300 cursor-pointer transition"
+            >
+              <EyeOff size={14} />
+              Salir del Modo Vista
+            </button>
+          )}
         </div>
       </header>
 
@@ -137,13 +170,13 @@ export default function PresenterMode({ storyboardName, panels, locutions, onClo
                 {/* Textos debajo de Diapositiva */}
                 <div className="w-full grid md:grid-cols-2 gap-6 mt-8">
                   <div className="bg-slate-900/60 border border-slate-800 p-5 rounded-xl shadow-lg">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-purple-400 mb-2">Descripción del Plano</h3>
+                    <h3 className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: projectColors.color_cliente }}>Descripción del Plano</h3>
                     <p className="text-slate-200 text-sm whitespace-pre-wrap leading-relaxed">
                       {panels[activeSlideIndex].description || <span className="italic text-slate-500">-</span>}
                     </p>
                   </div>
                   <div className="bg-slate-900/60 border border-slate-800 p-5 rounded-xl shadow-lg">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-400 mb-2">Locución / Audio</h3>
+                    <h3 className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: projectColors.color_campana }}>Locución / Audio</h3>
                     <p className="text-slate-200 text-sm whitespace-pre-wrap leading-relaxed">
                       {locutions[activeSlideIndex] || <span className="italic text-slate-500">-</span>}
                     </p>
@@ -203,14 +236,14 @@ export default function PresenterMode({ storyboardName, panels, locutions, onClo
                       {layoutMode !== 20 ? (
                         <div className="flex-1 flex flex-col gap-3.5 text-xs">
                           <div className="flex-1 bg-slate-950/40 p-2.5 rounded border border-slate-850">
-                            <strong className="block text-purple-400 text-[10px] uppercase tracking-wider mb-1.5">Descripción:</strong>
+                            <strong className="block text-[10px] uppercase tracking-wider mb-1.5" style={{ color: projectColors.color_cliente }}>Descripción:</strong>
                             <p className="text-slate-200 line-clamp-3 leading-relaxed whitespace-pre-wrap">
                               {panel.description || <span className="italic text-slate-600"></span>}
                             </p>
                           </div>
 
                           <div className="flex-1 bg-slate-950/40 p-2.5 rounded border border-slate-850">
-                            <strong className="block text-emerald-400 text-[10px] uppercase tracking-wider mb-1.5">Locución / Audio:</strong>
+                            <strong className="block text-[10px] uppercase tracking-wider mb-1.5" style={{ color: projectColors.color_campana }}>Locución / Audio:</strong>
                             <p className="text-slate-200 line-clamp-3 leading-relaxed whitespace-pre-wrap">
                               {loc || <span className="italic text-slate-600"></span>}
                             </p>
@@ -220,11 +253,11 @@ export default function PresenterMode({ storyboardName, panels, locutions, onClo
                         /* Vista ultra resumida para 20 por página */
                         <div className="text-[10px] flex flex-col gap-1.5 bg-slate-950/40 p-1.5 rounded">
                           <div>
-                            <span className="text-purple-400 font-bold mr-1">D:</span>
+                            <span className="font-bold mr-1" style={{ color: projectColors.color_cliente }}>D:</span>
                             <span className="text-slate-300 line-clamp-1">{panel.description || '-'}</span>
                           </div>
                           <div>
-                            <span className="text-emerald-400 font-bold mr-1">A:</span>
+                            <span className="font-bold mr-1" style={{ color: projectColors.color_campana }}>A:</span>
                             <span className="text-slate-300 line-clamp-1">{loc || '-'}</span>
                           </div>
                         </div>

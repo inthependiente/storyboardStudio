@@ -19,6 +19,7 @@ import {
   AlertCircle,
   FileText,
   RefreshCw,
+  PlusCircle,
   Image as ImageIcon
 } from 'lucide-react'
 
@@ -41,33 +42,84 @@ export default function App() {
   const [locutions, setLocutions] = useState([])
   const [storyboardName, setStoryboardName] = useState('')
 
+  // Estados de autenticación
+  const [session, setSession] = useState(null)
+  const [authLoading, setAuthLoading] = useState(true)
+  const [loginEmail, setLoginEmail] = useState('')
+  const [magicLinkSent, setMagicLinkSent] = useState(false)
+
   // UI States
   const [showPresenter, setShowPresenter] = useState(false)
   const [showNewStoryboardModal, setShowNewStoryboardModal] = useState(false)
   const [newStoryboardName, setNewStoryboardName] = useState('')
   const [customProjectId, setCustomProjectId] = useState('')
   const [pdfLayout, setPdfLayout] = useState(6) // 1, 4, 6, 20
+  const [projectInfo, setProjectInfo] = useState(null) // { campana, color_cliente, color_campana }
 
-  // Cargar proyectos iniciales de Supabase
+  // Verificar sesión al montar
   useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session)
+      setAuthLoading(false)
+    })
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  // Cargar datos iniciales (solo si hay sesión)
+  useEffect(() => {
+    if (!session) return
     fetchProjects()
 
-    // Soporte para entrar directo a un storyboard vía URL (ideal para clientes el día de rodaje)
+    // Soporte para entrar directo a un proyecto vía URL (ideal para clientes el día de rodaje)
     const params = new URLSearchParams(window.location.search)
-    const storyboardIdParam = params.get('storyboard_id')
+    const projectIdParam = params.get('project_id')
     const modeParam = params.get('mode')
-    if (storyboardIdParam) {
-      loadStoryboardById(parseInt(storyboardIdParam, 10), modeParam === 'presenter')
+    if (projectIdParam) {
+      loadProjectById(parseInt(projectIdParam, 10), modeParam === 'presenter')
     }
-  }, [])
+  }, [session])
+
+  const handleLogin = async (e) => {
+    e.preventDefault()
+    if (!loginEmail.trim()) return
+    try {
+      setAuthLoading(true)
+      const { error } = await supabase.auth.signInWithOtp({ email: loginEmail.trim() })
+      if (error) throw error
+      setMagicLinkSent(true)
+    } catch (err) {
+      alert(`Error al enviar enlace: ${err.message}`)
+    } finally {
+      setAuthLoading(false)
+    }
+  }
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    setSession(null)
+    setProjects([])
+    setSelectedProjectId(null)
+    setStoryboards([])
+    setActiveStoryboard(null)
+    setPanels([])
+    setLocutions([])
+    setProjectInfo(null)
+  }
 
   // Cargar storyboards cuando cambia el proyecto seleccionado
   useEffect(() => {
     if (selectedProjectId) {
       fetchStoryboards(selectedProjectId)
+      fetchProjectInfo(selectedProjectId)
     } else {
       setStoryboards([])
       setActiveStoryboard(null)
+      setProjectInfo(null)
     }
   }, [selectedProjectId])
 
@@ -76,7 +128,7 @@ export default function App() {
       setLoading(true)
       const { data, error } = await supabase
         .from('proyectos')
-        .select('id')
+        .select('id, campana, color_cliente, color_campana')
       if (error) throw error
       setProjects(data || [])
     } catch (e) {
@@ -103,28 +155,48 @@ export default function App() {
     }
   }
 
-  const loadStoryboardById = async (id, startInPresenter = false) => {
+  const fetchProjectInfo = async (projectId) => {
+    try {
+      const { data, error } = await supabase
+        .from('proyectos')
+        .select('campana, color_cliente, color_campana')
+        .eq('id', projectId)
+        .single()
+      if (error) throw error
+      setProjectInfo(data)
+    } catch (e) {
+      console.error('Error cargando info del proyecto:', e.message)
+      setProjectInfo(null)
+    }
+  }
+
+  const loadProjectById = async (projectId, startInPresenter = false) => {
     try {
       setLoading(true)
+      setSelectedProjectId(projectId)
+      await fetchProjectInfo(projectId)
       const { data, error } = await supabase
         .from('storyboards')
         .select('*')
-        .eq('id', id)
-        .single()
+        .eq('proyecto_id', projectId)
+        .order('created_at', { ascending: false })
       if (error) throw error
+      setStoryboards(data || [])
 
-      setActiveStoryboard(data)
-      setStoryboardName(data.name)
-      setPanels(data.panels || [])
-      setLocutions(data.locutions || [])
-      setSelectedProjectId(data.proyecto_id)
+      const firstSb = data?.[0]
+      if (firstSb) {
+        setActiveStoryboard(firstSb)
+        setStoryboardName(firstSb.name)
+        setPanels(firstSb.panels || [])
+        setLocutions(firstSb.locutions || [])
+      }
 
-      if (startInPresenter) {
+      if (startInPresenter && firstSb) {
         setShowPresenter(true)
       }
     } catch (e) {
-      console.error('Error cargando storyboard directo:', e.message)
-      alert('No se pudo cargar el storyboard desde el enlace.')
+      console.error('Error cargando proyecto directo:', e.message)
+      alert('No se pudo cargar el proyecto desde el enlace.')
     } finally {
       setLoading(false)
     }
@@ -575,8 +647,8 @@ export default function App() {
 
   // Copiar enlace de presentación al portapapeles
   const handleShareLink = () => {
-    if (!activeStoryboard) return
-    const shareUrl = `${window.location.origin}${window.location.pathname}?storyboard_id=${activeStoryboard.id}&mode=presenter`
+    if (!selectedProjectId) return
+    const shareUrl = `${window.location.origin}${window.location.pathname}?project_id=${selectedProjectId}&mode=presenter`
     navigator.clipboard.writeText(shareUrl)
       .then(() => alert('¡Enlace de presentación copiado al portapapeles! Envíalo al cliente o director.'))
       .catch(() => alert('No se pudo copiar el enlace automáticamente.'))
@@ -589,8 +661,89 @@ export default function App() {
         storyboardName={storyboardName}
         panels={panels}
         locutions={locutions}
+        storyboards={storyboards}
+        activeStoryboardId={activeStoryboard?.id}
+        projectColors={{
+          color_cliente: projectInfo?.color_cliente || '#a78bfa',
+          color_campana: projectInfo?.color_campana || '#34d399'
+        }}
+        isAuthenticated={!!session}
+        onSwitchStoryboard={(sb) => {
+          setActiveStoryboard(sb)
+          setStoryboardName(sb.name)
+          setPanels(sb.panels || [])
+          setLocutions(sb.locutions || [])
+        }}
         onClose={() => setShowPresenter(false)}
       />
+    )
+  }
+
+  // Pantalla de carga de autenticación
+  if (authLoading) {
+    return (
+      <div className="flex-1 flex items-center justify-center text-slate-400 gap-2">
+        <Loader2 className="animate-spin text-purple-500" size={24} />
+        <span>Verificando sesión...</span>
+      </div>
+    )
+  }
+
+  // Pantalla de inicio de sesión
+  if (!session) {
+    return (
+      <div className="flex-1 flex items-center justify-center p-4">
+        <div className="bg-slate-900 p-8 rounded-2xl border border-slate-800 shadow-2xl max-w-sm w-full text-center">
+          <div className="w-16 h-16 bg-purple-900/40 text-purple-400 rounded-full flex items-center justify-center mx-auto mb-4 border border-purple-800/50">
+            <ImageIcon size={32} />
+          </div>
+
+          <h2 className="text-xl font-bold text-white mb-2">Storyboard Studio</h2>
+          <p className="text-slate-400 text-sm mb-6">
+            {magicLinkSent
+              ? 'Te hemos enviado un enlace mágico a tu correo. Revisa tu bandeja de entrada.'
+              : 'Ingresa tu correo autorizado para acceder.'}
+          </p>
+
+          {!magicLinkSent ? (
+            <form onSubmit={handleLogin} className="flex flex-col gap-3">
+              <input
+                type="email"
+                placeholder="tu@correo.com"
+                value={loginEmail}
+                onChange={(e) => setLoginEmail(e.target.value)}
+                className="w-full px-4 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-slate-200 outline-none focus:border-purple-500"
+                autoFocus
+                required
+              />
+              <button
+                type="submit"
+                disabled={authLoading || !loginEmail.trim()}
+                className="w-full py-2.5 px-4 bg-purple-600 hover:bg-purple-500 disabled:bg-slate-800 disabled:text-slate-500 text-white rounded-xl text-sm font-semibold shadow transition cursor-pointer"
+              >
+                {authLoading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <Loader2 size={14} className="animate-spin" />
+                    Enviando...
+                  </span>
+                ) : (
+                  'Enviar enlace mágico'
+                )}
+              </button>
+            </form>
+          ) : (
+            <p className="text-xs text-slate-500">
+              ¿No recibiste el correo?{' '}
+              <button
+                onClick={() => setMagicLinkSent(false)}
+                className="text-purple-400 hover:text-purple-300 underline cursor-pointer"
+              >
+                Intentar de nuevo
+              </button>
+            </p>
+          )}
+        </div>
+      </div>
     )
   }
 
@@ -607,10 +760,21 @@ export default function App() {
           <p className="text-slate-400 text-sm mt-1">Organización y sincronización inteligente de guiones gráficos efímeros.</p>
         </div>
 
-        {/* Info y Estado de Conexión */}
-        <div className="flex items-center gap-3 text-xs bg-slate-900 px-3.5 py-2 rounded-lg border border-slate-800 self-start">
-          <Database size={14} className="text-emerald-500 animate-pulse" />
-          <span className="text-slate-300 font-medium">Supabase Conectado</span>
+        {/* Info de Sesión y Estado de Conexión */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 text-xs bg-slate-900 px-3.5 py-2 rounded-lg border border-slate-800">
+            <Database size={14} className="text-emerald-500 animate-pulse" />
+            <span className="text-slate-300 font-medium">Supabase Conectado</span>
+          </div>
+          <div className="flex items-center gap-2 text-xs bg-slate-900 px-3.5 py-2 rounded-lg border border-slate-800">
+            <span className="text-slate-400">{session.user.email}</span>
+            <button
+              onClick={handleLogout}
+              className="text-rose-400 hover:text-rose-300 font-semibold cursor-pointer transition"
+            >
+              Salir
+            </button>
+          </div>
         </div>
       </header>
 
@@ -635,7 +799,7 @@ export default function App() {
                   <option value="" disabled>-- Selecciona un ID de Proyecto --</option>
                   {projects.map((proj) => (
                     <option key={proj.id} value={proj.id}>
-                      Proyecto #{proj.id}
+                      {proj.campana || `Proyecto #${proj.id}`}
                     </option>
                   ))}
                 </select>
@@ -905,6 +1069,31 @@ export default function App() {
                     </div>
 
                     <div className="flex items-center gap-3">
+                      {/* Insertar viñeta en posición específica (Header) */}
+                      <div className="flex items-center gap-1.5 bg-slate-950 px-2 py-1.5 rounded-lg border border-slate-800">
+                        <select
+                          id="header-insert-position"
+                          defaultValue={panels.length}
+                          className="bg-slate-800 border border-slate-700 rounded text-slate-200 text-xs px-2 py-1 outline-none"
+                        >
+                          {Array.from({ length: panels.length + 1 }, (_, i) => (
+                            <option key={i} value={i}>
+                              Posición {i + 1}
+                            </option>
+                          ))}
+                        </select>
+                        <button
+                          onClick={() => {
+                            const select = document.getElementById('header-insert-position')
+                            const insertIdx = parseInt(select?.value || panels.length.toString(), 10)
+                            handleAddPanel(insertIdx)
+                          }}
+                          className="flex items-center gap-1.5 px-3 py-1 bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white text-xs font-semibold rounded shadow transition cursor-pointer"
+                        >
+                          <PlusCircle size={14} />
+                          Añadir aquí
+                        </button>
+                      </div>
                       <CSVImporter onImport={handleCSVImport} />
                     </div>
                   </div>
