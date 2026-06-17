@@ -42,7 +42,7 @@ export default function PresenterMode({
           </h1>
           {storyboards.length > 1 && (
             <div className="flex items-center gap-1.5">
-              <span className="hidden md:inline text-[10px] text-slate-500 font-medium">Elige un storyboard:</span>
+              <span className="md:inline text-[10px] text-slate-500 font-medium">Elige un storyboard:</span>
               <select
                 value={activeStoryboardId || ''}
                 onChange={handleStoryboardChange}
