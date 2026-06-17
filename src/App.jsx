@@ -57,11 +57,22 @@ export default function App() {
   const [pdfLayout, setPdfLayout] = useState(6) // 1, 4, 6, 20
   const [projectInfo, setProjectInfo] = useState(null) // { campana, color_cliente, color_campana }
 
-  // Verificar sesión al montar
-  useEffect(() => {
-    // Debug: mostrar qué URL de Supabase se está usando
-    console.log('🔍 Supabase URL configurada:', import.meta.env.VITE_SUPABASE_URL || 'NO DEFINIDA')
+  // Estado para vista pública sin autenticación (link compartido)
+  const [publicView, setPublicView] = useState(null) // { storyboardName, panels, locutions, storyboards, ... }
 
+  // Al montar: determinar si es vista pública o flujo normal
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const projectIdParam = params.get('project_id')
+    const modeParam = params.get('mode')
+
+    if (projectIdParam && modeParam === 'presenter') {
+      // Modo vista pública — no requiere autenticación
+      loadPublicView(parseInt(projectIdParam, 10))
+      return
+    }
+
+    // Flujo normal: verificar sesión
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
       setAuthLoading(false)
@@ -78,15 +89,43 @@ export default function App() {
   useEffect(() => {
     if (!session) return
     fetchProjects()
-
-    // Soporte para entrar directo a un proyecto vía URL (ideal para clientes el día de rodaje)
-    const params = new URLSearchParams(window.location.search)
-    const projectIdParam = params.get('project_id')
-    const modeParam = params.get('mode')
-    if (projectIdParam) {
-      loadProjectById(parseInt(projectIdParam, 10), modeParam === 'presenter')
-    }
   }, [session])
+
+  const loadPublicView = async (projectId) => {
+    try {
+      setAuthLoading(true)
+      const [projRes, sbRes] = await Promise.all([
+        supabase.from('proyectos').select('campana, color_cliente, color_campana').eq('id', projectId).single(),
+        supabase.from('storyboards').select('*').eq('proyecto_id', projectId).order('created_at', { ascending: false })
+      ])
+
+      if (sbRes.error) throw sbRes.error
+      if (!sbRes.data || sbRes.data.length === 0) {
+        alert('No hay storyboards disponibles para este proyecto.')
+        return
+      }
+
+      const projectData = projRes.data || {}
+      const firstSb = sbRes.data[0]
+
+      setPublicView({
+        storyboardName: firstSb.name,
+        panels: firstSb.panels || [],
+        locutions: firstSb.locutions || [],
+        storyboards: sbRes.data,
+        activeStoryboardId: firstSb.id,
+        projectColors: {
+          color_cliente: projectData.color_cliente || '#a78bfa',
+          color_campana: projectData.color_campana || '#34d399'
+        }
+      })
+    } catch (e) {
+      console.error('Error cargando vista pública:', e.message)
+      alert(`Error al cargar la vista del proyecto: ${e.message}`)
+    } finally {
+      setAuthLoading(false)
+    }
+  }
 
   const handleLogin = async (e) => {
     e.preventDefault()
@@ -689,6 +728,31 @@ Si ves "NO DEFINIDA", el archivo .env no se creó correctamente en el build de G
           setLocutions(sb.locutions || [])
         }}
         onClose={() => setShowPresenter(false)}
+      />
+    )
+  }
+
+  // Vista pública (link compartido) — sin autenticación
+  if (publicView) {
+    return (
+      <PresenterMode
+        storyboardName={publicView.storyboardName}
+        panels={publicView.panels}
+        locutions={publicView.locutions}
+        storyboards={publicView.storyboards}
+        activeStoryboardId={publicView.activeStoryboardId}
+        projectColors={publicView.projectColors}
+        isAuthenticated={false}
+        onSwitchStoryboard={(sb) => {
+          setPublicView({
+            ...publicView,
+            storyboardName: sb.name,
+            panels: sb.panels || [],
+            locutions: sb.locutions || [],
+            activeStoryboardId: sb.id
+          })
+        }}
+        onClose={() => {}}
       />
     )
   }
