@@ -832,7 +832,7 @@ Si ves "NO DEFINIDA", el archivo .env no se creó correctamente en el build de G
             <ImageIcon className="text-purple-400" />
             Storyboard Studio
           </h1>
-          <p className="text-slate-400 text-sm mt-1">Organización y sincronización inteligente de guiones gráficos efímeros.</p>
+          <p className="text-slate-400 text-sm mt-1">Organización rápida de storyboards.</p>
         </div>
 
         {/* Info de Sesión y Estado de Conexión */}
