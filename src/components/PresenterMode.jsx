@@ -41,23 +41,47 @@ export default function PresenterMode({
             {storyboardName}
           </h1>
           {storyboards.length > 1 && (
-            <select
-              value={activeStoryboardId || ''}
-              onChange={handleStoryboardChange}
-              className="bg-slate-800 border border-slate-700 rounded-lg text-slate-200 text-xs px-2.5 py-1.5 outline-none cursor-pointer focus:border-purple-500"
-            >
-              {storyboards.map((sb) => (
-                <option key={sb.id} value={sb.id}>
-                  {sb.name}
-                </option>
-              ))}
-            </select>
+            <div className="flex items-center gap-1.5">
+              <span className="hidden md:inline text-[10px] text-slate-500 font-medium">Elige un storyboard:</span>
+              <select
+                value={activeStoryboardId || ''}
+                onChange={handleStoryboardChange}
+                className="bg-slate-800 border border-slate-700 rounded-lg text-slate-200 text-xs px-2.5 py-1.5 outline-none cursor-pointer focus:border-purple-500"
+              >
+                {storyboards.map((sb) => (
+                  <option key={sb.id} value={sb.id}>
+                    {sb.name}
+                  </option>
+                ))}
+              </select>
+            </div>
           )}
         </div>
 
         {/* Controles de Vista */}
         <div className="flex items-center gap-4">
-          <div className="flex bg-slate-950 p-1 rounded-lg border border-slate-800">
+          {/* Mobile: solo Galería y Deslizable */}
+          <div className="flex md:hidden bg-slate-950 p-1 rounded-lg border border-slate-800">
+            <button
+              onClick={() => { setLayoutMode(1); setActiveSlideIndex(0); }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold cursor-pointer transition ${layoutMode === 1 ? 'bg-purple-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'
+                }`}
+            >
+              <MonitorPlay size={14} />
+              Galería
+            </button>
+            <button
+              onClick={() => setLayoutMode(4)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold cursor-pointer transition ${layoutMode === 4 ? 'bg-purple-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'
+                }`}
+            >
+              <LayoutGrid size={14} />
+              Deslizable
+            </button>
+          </div>
+
+          {/* Desktop: 4 opciones completas */}
+          <div className="hidden md:flex bg-slate-950 p-1 rounded-lg border border-slate-800">
             <button
               onClick={() => { setLayoutMode(1); setActiveSlideIndex(0); }}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold cursor-pointer transition ${layoutMode === 1 ? 'bg-purple-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'
