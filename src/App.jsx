@@ -1060,12 +1060,12 @@ Si ves "NO DEFINIDA", el archivo .env no se creó correctamente en el build de G
                     Vista Rodaje
                   </button>
 
-                  <button
+                  {/* <button
                     onClick={handleShareLink}
                     className="flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-lg border border-slate-700 transition cursor-pointer"
                   >
                     Compartir Link
-                  </button>
+                  </button> */}
 
                   {/* Exportación PDF */}
                   <div className="flex items-center bg-slate-950 rounded-lg border border-slate-800 p-0.5">
@@ -1090,7 +1090,7 @@ Si ves "NO DEFINIDA", el archivo .env no se creó correctamente en el build de G
 
                   {/* Exportación PPT */}
                   <div className="flex items-center bg-slate-950 rounded-lg border border-slate-800 p-0.5">
-                    <select
+                    {/* <select
                       value={pdfLayout}
                       onChange={(e) => setPdfLayout(parseInt(e.target.value, 10))}
                       className="bg-transparent text-slate-300 text-xs px-2.5 py-1 outline-none cursor-pointer"
@@ -1099,7 +1099,7 @@ Si ves "NO DEFINIDA", el archivo .env no se creó correctamente en el build de G
                       <option value="4">4 x pág</option>
                       <option value="6">6 x pág</option>
                       <option value="20">20 x pág</option>
-                    </select>
+                    </select> */}
                     <button
                       onClick={handleExportPPT}
                       className="flex items-center gap-1 px-3 py-1 bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold rounded shadow transition cursor-pointer"
