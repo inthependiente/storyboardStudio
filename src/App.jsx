@@ -97,7 +97,11 @@ export default function App() {
       })
       if (error) throw error
     } catch (err) {
-      setLoginError(err.message)
+      if (err.message === 'Failed to fetch') {
+        setLoginError('Error de conexión con el servidor. Verifica que el dominio de GitHub Pages esté permitido en Supabase (Authentication → Settings → Allowed URLs).')
+      } else {
+        setLoginError(err.message)
+      }
     } finally {
       setAuthLoading(false)
     }
