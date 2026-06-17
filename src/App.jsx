@@ -23,7 +23,7 @@ import {
   Image as ImageIcon
 } from 'lucide-react'
 
-// Comparador alfanumérico natural ("1", "1A", "2", "10")
+// Comparador alfanumérico natural ("1", "1A", "2", "10") Aumento un comment solo para el push a github
 const naturalCompare = (a, b) => {
   return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
 }
