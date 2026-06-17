@@ -4,6 +4,7 @@ import StoryboardTable from './components/StoryboardTable'
 import CSVImporter from './components/CSVImporter'
 import PresenterMode from './components/PresenterMode'
 import { generateStoryboardPDF } from './utils/pdfGenerator'
+import { generateStoryboardPPT } from './utils/pptGenerator'
 import {
   Folder,
   FolderOpen,
@@ -698,6 +699,25 @@ Si ves "NO DEFINIDA", el archivo .env no se creó correctamente en el build de G
     }
   }
 
+  // Generar PPT usando PptxGenJS
+  const handleExportPPT = async () => {
+    if (!activeStoryboard) return
+    try {
+      setSaving(true)
+      await generateStoryboardPPT(
+        storyboardName,
+        panels,
+        locutions,
+        pdfLayout,
+        projectInfo?.color_cliente || '#E8580C'
+      )
+    } catch (e) {
+      alert(`Error generando PPT: ${e.message}`)
+    } finally {
+      setSaving(false)
+    }
+  }
+
   // Copiar enlace de presentación al portapapeles
   const handleShareLink = () => {
     if (!selectedProjectId) return
@@ -1065,6 +1085,27 @@ Si ves "NO DEFINIDA", el archivo .env no se creó correctamente en el build de G
                     >
                       <Download size={12} />
                       Exportar PDF
+                    </button>
+                  </div>
+
+                  {/* Exportación PPT */}
+                  <div className="flex items-center bg-slate-950 rounded-lg border border-slate-800 p-0.5">
+                    <select
+                      value={pdfLayout}
+                      onChange={(e) => setPdfLayout(parseInt(e.target.value, 10))}
+                      className="bg-transparent text-slate-300 text-xs px-2.5 py-1 outline-none cursor-pointer"
+                    >
+                      <option value="1">1 x pág</option>
+                      <option value="4">4 x pág</option>
+                      <option value="6">6 x pág</option>
+                      <option value="20">20 x pág</option>
+                    </select>
+                    <button
+                      onClick={handleExportPPT}
+                      className="flex items-center gap-1 px-3 py-1 bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold rounded shadow transition cursor-pointer"
+                    >
+                      <Download size={12} />
+                      Exportar PPT
                     </button>
                   </div>
 
