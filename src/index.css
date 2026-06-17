@@ -1,0 +1,8 @@
+@import "tailwindcss";
+
+/* Estilos globales para impresión y ajustes menores */
+@layer base {
+  body {
+    @apply bg-slate-900 text-slate-100 min-h-screen antialiased;
+  }
+}
