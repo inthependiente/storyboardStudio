@@ -46,7 +46,8 @@ export default function App() {
   const [session, setSession] = useState(null)
   const [authLoading, setAuthLoading] = useState(true)
   const [loginEmail, setLoginEmail] = useState('')
-  const [magicLinkSent, setMagicLinkSent] = useState(false)
+  const [loginPassword, setLoginPassword] = useState('')
+  const [loginError, setLoginError] = useState('')
 
   // UI States
   const [showPresenter, setShowPresenter] = useState(false)
@@ -86,14 +87,17 @@ export default function App() {
 
   const handleLogin = async (e) => {
     e.preventDefault()
-    if (!loginEmail.trim()) return
+    setLoginError('')
+    if (!loginEmail.trim() || !loginPassword.trim()) return
     try {
       setAuthLoading(true)
-      const { error } = await supabase.auth.signInWithOtp({ email: loginEmail.trim() })
+      const { error } = await supabase.auth.signInWithPassword({
+        email: loginEmail.trim(),
+        password: loginPassword
+      })
       if (error) throw error
-      setMagicLinkSent(true)
     } catch (err) {
-      alert(`Error al enviar enlace: ${err.message}`)
+      setLoginError(err.message)
     } finally {
       setAuthLoading(false)
     }
@@ -700,48 +704,45 @@ export default function App() {
 
           <h2 className="text-xl font-bold text-white mb-2">Storyboard Studio</h2>
           <p className="text-slate-400 text-sm mb-6">
-            {magicLinkSent
-              ? 'Te hemos enviado un enlace mágico a tu correo. Revisa tu bandeja de entrada.'
-              : 'Ingresa tu correo autorizado para acceder.'}
+            Inicia sesión con tu correo autorizado.
           </p>
 
-          {!magicLinkSent ? (
-            <form onSubmit={handleLogin} className="flex flex-col gap-3">
-              <input
-                type="email"
-                placeholder="tu@correo.com"
-                value={loginEmail}
-                onChange={(e) => setLoginEmail(e.target.value)}
-                className="w-full px-4 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-slate-200 outline-none focus:border-purple-500"
-                autoFocus
-                required
-              />
-              <button
-                type="submit"
-                disabled={authLoading || !loginEmail.trim()}
-                className="w-full py-2.5 px-4 bg-purple-600 hover:bg-purple-500 disabled:bg-slate-800 disabled:text-slate-500 text-white rounded-xl text-sm font-semibold shadow transition cursor-pointer"
-              >
-                {authLoading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <Loader2 size={14} className="animate-spin" />
-                    Enviando...
-                  </span>
-                ) : (
-                  'Enviar enlace mágico'
-                )}
-              </button>
-            </form>
-          ) : (
-            <p className="text-xs text-slate-500">
-              ¿No recibiste el correo?{' '}
-              <button
-                onClick={() => setMagicLinkSent(false)}
-                className="text-purple-400 hover:text-purple-300 underline cursor-pointer"
-              >
-                Intentar de nuevo
-              </button>
-            </p>
-          )}
+          <form onSubmit={handleLogin} className="flex flex-col gap-3">
+            <input
+              type="email"
+              placeholder="correo@ejemplo.com"
+              value={loginEmail}
+              onChange={(e) => setLoginEmail(e.target.value)}
+              className="w-full px-4 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-slate-200 outline-none focus:border-purple-500"
+              autoFocus
+              required
+            />
+            <input
+              type="password"
+              placeholder="Contraseña"
+              value={loginPassword}
+              onChange={(e) => setLoginPassword(e.target.value)}
+              className="w-full px-4 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-slate-200 outline-none focus:border-purple-500"
+              required
+            />
+            {loginError && (
+              <p className="text-xs text-rose-400 text-left">{loginError}</p>
+            )}
+            <button
+              type="submit"
+              disabled={authLoading || !loginEmail.trim() || !loginPassword.trim()}
+              className="w-full py-2.5 px-4 bg-purple-600 hover:bg-purple-500 disabled:bg-slate-800 disabled:text-slate-500 text-white rounded-xl text-sm font-semibold shadow transition cursor-pointer"
+            >
+              {authLoading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <Loader2 size={14} className="animate-spin" />
+                  Iniciando sesión...
+                </span>
+              ) : (
+                'Iniciar sesión'
+              )}
+            </button>
+          </form>
         </div>
       </div>
     )
