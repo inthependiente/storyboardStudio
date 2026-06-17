@@ -101,10 +101,9 @@ export default function App() {
       if (error) throw error
     } catch (err) {
       if (err.message === 'Failed to fetch') {
-        setLoginError(`Error de conexión con Supabase. Revisa la consola del navegador (F12) para más detalles.
-Posibles causas:
-1️⃣ En Supabase: Project Settings → API → agrega "https://${window.location.hostname}" en Allowed Origins
-2️⃣ Los secrets de GitHub no se inyectaron correctamente en el build`)
+        setLoginError(`Error de conexión con el servidor de Supabase.
+Revisa la consola del navegador (F12 → Console) para verificar la URL cargada.
+Si ves "NO DEFINIDA", el archivo .env no se creó correctamente en el build de GitHub Pages.`)
       } else {
         setLoginError(err.message)
       }
