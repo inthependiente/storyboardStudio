@@ -64,7 +64,7 @@ export default function App() {
   // Al montar: determinar si es vista pública o flujo normal
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    const projectIdParam = params.get('project_id')
+    const projectIdParam = params.get('id')
     const modeParam = params.get('mode')
 
     if (projectIdParam && modeParam === 'presenter') {
@@ -721,7 +721,7 @@ Si ves "NO DEFINIDA", el archivo .env no se creó correctamente en el build de G
   // Copiar enlace de presentación al portapapeles
   const handleShareLink = () => {
     if (!selectedProjectId) return
-    const shareUrl = `${window.location.origin}${window.location.pathname}?project_id=${selectedProjectId}&mode=presenter`
+    const shareUrl = `${window.location.origin}${window.location.pathname}?id=${selectedProjectId}&mode=presenter`
     navigator.clipboard.writeText(shareUrl)
       .then(() => alert('¡Enlace de presentación copiado al portapapeles! Envíalo al cliente o director.'))
       .catch(() => alert('No se pudo copiar el enlace automáticamente.'))
