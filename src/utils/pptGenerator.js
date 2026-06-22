@@ -127,7 +127,7 @@ export const generateStoryboardPPT = async (storyboardName, panels, locutions, p
         addImageToSlide(slide, img, imgLeft, imgY + offsetY, imgW, imgH)
         slide.addText([
           { text: 'Locución: ', options: { bold: true, fontFace: FONT, fontSize: 15, color: TXT_COLOR } },
-          { text: loc || '(sin audio)', options: { italic: true, fontFace: FONT, fontSize: 15, color: TXT_COLOR } }
+          { text: loc, options: { italic: true, fontFace: FONT, fontSize: 15, color: TXT_COLOR } }
         ], { x: imgLeft, y: SH - M - 0.4, w: SW - imgLeft - M, h: 0.5 })
       }
     } else if (panelsPerSlide === 4) {
@@ -160,7 +160,7 @@ export const generateStoryboardPPT = async (storyboardName, panels, locutions, p
         const textY = imgY + imgH + 0.06
         slide.addText([
           { text: 'Locución: ', options: { bold: true, fontFace: FONT, fontSize: 11, color: TXT_COLOR } },
-          { text: loc || '(sin audio)', options: { italic: true, fontFace: FONT, fontSize: 11, color: TXT_COLOR } }
+          { text: loc, options: { italic: true, fontFace: FONT, fontSize: 11, color: TXT_COLOR } }
         ], { x: imgLeft, y: textY, w: cardW - offsetX, h: cardH - (textY - y), valign: 'top' })
       }
     } else if (panelsPerSlide === 6) {
@@ -193,7 +193,7 @@ export const generateStoryboardPPT = async (storyboardName, panels, locutions, p
         const textY = imgY + imgH + 0.05
         slide.addText([
           { text: 'Locución: ', options: { bold: true, fontFace: FONT, fontSize: 11, color: TXT_COLOR } },
-          { text: loc || '(sin audio)', options: { italic: true, fontFace: FONT, fontSize: 11, color: TXT_COLOR } }
+          { text: loc, options: { italic: true, fontFace: FONT, fontSize: 11, color: TXT_COLOR } }
         ], { x: imgLeft, y: textY, w: cardW - offsetX, h: cardH - (textY - y), valign: 'top' })
       }
     } else if (panelsPerSlide === 20) {
