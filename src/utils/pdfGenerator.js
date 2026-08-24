@@ -112,13 +112,13 @@ export const generateStoryboardPDF = async (storyboardName, panels, locutions, p
       textY += 14
 
       // Descripción
-      // doc.setFont('BarlowCondensed', 'bold')
-      // doc.setFontSize(12)
-      // doc.text('DESCRIPCIÓN:', textX, textY + 130)
-      // doc.setFont('BarlowCondensed', 'normal')
-      // doc.setFontSize(11)
-      //const descLines = doc.splitTextToSize(panel.description, 250, 20)
-      // doc.text(descLines, textX, textY + 135)
+      doc.setFont('BarlowCondensed', 'bold')
+      doc.setFontSize(12)
+      doc.text('DESCRIPCIÓN:', textX, textY + 130)
+      doc.setFont('BarlowCondensed', 'normal')
+      doc.setFontSize(11)
+      const descLines = doc.splitTextToSize(panel.description, 250, 20)
+      doc.text(descLines, textX, textY + 135)
 
       textY += 15 + (descLines.length * 4.5)
 
@@ -197,26 +197,26 @@ export const generateStoryboardPDF = async (storyboardName, panels, locutions, p
         doc.setTextColor(60, 60, 60)
 
         // Descripción
-        // doc.setFont('BarlowCondensed', 'bold')
-        // doc.text('Descripción:', x + 3, textY)
-        // doc.roundedRect(x + 2, textY + 1, 106, 10, 2, 2, 'S')
-        // doc.setFont('BarlowCondensed', 'normal')
-        // const descLines = doc.splitTextToSize(panel.description || '', colWidth - 4)
-        // const descToDraw = descLines.slice(0, 2) // max 2 líneas por espacio
-        // doc.text(descToDraw, x + 4, textY + 5)
+        doc.setFont('BarlowCondensed', 'bold')
+        doc.text('Descripción:', x + 3, textY)
+        doc.roundedRect(x + 2, textY + 1, 106, 10, 2, 2, 'S')
+        doc.setFont('BarlowCondensed', 'normal')
+        const descLines = doc.splitTextToSize(panel.description || '', colWidth - 4)
+        const descToDraw = descLines.slice(0, 2) // max 2 líneas por espacio
+        doc.text(descToDraw, x + 4, textY + 5)
 
         //tamaño del texto de descripción
-        // const descY = doc.getTextDimensions(descLines).h;
+        const descY = doc.getTextDimensions(descLines).h;
 
         // Locución (Audio)
         textY += 4.5
         doc.setFont('BarlowCondensed', 'bold')
         doc.text('Locución / Letra:', x + 3, textY + 10)
-        doc.roundedRect(x + 2, textY + 1, 106, 10, 2, 2, 'S')
+        doc.roundedRect(x + 2, textY + 11, 106, 10, 2, 2, 'S')
         doc.setFont('BarlowCondensed', 'italic')
         const locLines = doc.splitTextToSize(locution || '', colWidth - 4)
         const locToDraw = locLines.slice(0, 2) // max 2 líneas
-        doc.text(locToDraw, x + 4, textY + 5)
+        doc.text(locToDraw, x + 4, textY + 15)
       }
     }
 
@@ -286,23 +286,23 @@ export const generateStoryboardPDF = async (storyboardName, panels, locutions, p
         doc.setTextColor(60, 60, 60)
 
         // Descripción
-        // doc.setFont('BarlowCondensed', 'bold')
-        // doc.text('Descripción:', x + 4, textY + 1)
-        // doc.roundedRect(x + 2, textY + 2, 78, 10, 2, 2, 'S')
-        // doc.setFont('BarlowCondensed', 'normal')
-        // const descLines = doc.splitTextToSize(panel.description || '', colWidth - 10)
-        // const descToDraw = descLines.slice(0, 2)
-        // doc.text(descToDraw, x + 5, textY + 6)
+        doc.setFont('BarlowCondensed', 'bold')
+        doc.text('Descripción:', x + 4, textY + 1)
+        doc.roundedRect(x + 2, textY + 2, 78, 10, 2, 2, 'S')
+        doc.setFont('BarlowCondensed', 'normal')
+        const descLines = doc.splitTextToSize(panel.description || '', colWidth - 10)
+        const descToDraw = descLines.slice(0, 2)
+        doc.text(descToDraw, x + 5, textY + 6)
 
         // Locución
         textY += 10
         doc.setFont('BarlowCondensed', 'bold')
         doc.text('Locución / Letra:', x + 4, textY + 7)
-        doc.roundedRect(x + 2, textY + 2, 78, 10, 2, 2, 'S')
+        doc.roundedRect(x + 2, textY + 9, 78, 10, 2, 2, 'S')
         doc.setFont('BarlowCondensed', 'italic')
         const locLines = doc.splitTextToSize(locution || '', colWidth - 10)
         const locToDraw = locLines.slice(0, 2)
-        doc.text(locToDraw, x + 5, textY + 6)
+        doc.text(locToDraw, x + 5, textY + 13)
       }
     }
 
