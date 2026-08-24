@@ -20,7 +20,7 @@ const getBase64ImageFromUrl = async (imageUrl) => {
   }
 }
 
-export const generateStoryboardPDF = async (storyboardName, panels, locutions, panelsPerPage) => {
+export const generateStoryboardPDF = async (storyboardName, panels, locutions, panelsPerPage, showDescription = false) => {
   // 1. Todos los PDF se exportan en formato horizontal (landscape)
   const doc = new jsPDF({
     orientation: 'landscape',
@@ -36,7 +36,6 @@ export const generateStoryboardPDF = async (storyboardName, panels, locutions, p
   doc.addFont("BarlowCondensed-Italic.ttf", "BarlowCondensed", "italic");
 
   const pageWidth = doc.internal.pageSize.getWidth() // 279mm
-  const pageHeight = doc.internal.pageSize.getHeight() // 216mm
   const margin = 5
   const usableWidth = pageWidth - (margin * 2) // 269mm
 
@@ -111,25 +110,37 @@ export const generateStoryboardPDF = async (storyboardName, panels, locutions, p
       doc.setTextColor(50, 50, 50)
       textY += 14
 
-      // Descripción
-      doc.setFont('BarlowCondensed', 'bold')
-      doc.setFontSize(12)
-      doc.text('DESCRIPCIÓN:', textX, textY + 130)
-      doc.setFont('BarlowCondensed', 'normal')
-      doc.setFontSize(11)
-      const descLines = doc.splitTextToSize(panel.description, 250, 20)
-      doc.text(descLines, textX, textY + 135)
+      if (showDescription) {
+        doc.setFont('BarlowCondensed', 'bold')
+        doc.setFontSize(12)
+        doc.text('DESCRIPCIÓN:', textX, textY + 130)
+        doc.setFont('BarlowCondensed', 'normal')
+        doc.setFontSize(11)
+        const descLines = doc.splitTextToSize(panel.description || '', 250, 20)
+        doc.text(descLines, textX, textY + 135)
+        textY += 15 + (descLines.length * 4.5)
+      } else {
+        textY = imgY + imgH + 8
+      }
 
-      textY += 15 + (descLines.length * 4.5)
-
-      // Locución
-      doc.setFont('BarlowCondensed', 'bold')
-      doc.setFontSize(12)
-      doc.text('LOCUCIÓN / LETRA:', textX, textY + 122)
-      doc.setFont('BarlowCondensed', 'italic')
-      doc.setFontSize(11)
-      const locLines = doc.splitTextToSize(locution, 250, 20)
-      doc.text(locLines, textX, textY + 127)
+      if (showDescription) {
+        doc.setFont('BarlowCondensed', 'bold')
+        doc.setFontSize(12)
+        doc.text('LOCUCIÓN / LETRA:', textX, textY + 122)
+        doc.setFont('BarlowCondensed', 'italic')
+        doc.setFontSize(11)
+        const locLines = doc.splitTextToSize(locution || '', 250, 20)
+        doc.text(locLines, textX, textY + 127)
+      } else {
+        doc.setFont('BarlowCondensed', 'bold')
+        doc.setFontSize(12)
+        doc.text('LOCUCIÓN / LETRA:', textX, textY)
+        doc.roundedRect(textX - 3, textY + 3, cardW - 14, 22, 2, 2, 'S')
+        doc.setFont('BarlowCondensed', 'italic')
+        doc.setFontSize(11)
+        const locLines = doc.splitTextToSize(locution || '', 250, 20)
+        doc.text(locLines.slice(0, 4), textX, textY + 9)
+      }
     }
 
   } else if (panelsPerPage === 4) {
@@ -196,27 +207,26 @@ export const generateStoryboardPDF = async (storyboardName, panels, locutions, p
         doc.setFontSize(10)
         doc.setTextColor(60, 60, 60)
 
-        // Descripción
-        doc.setFont('BarlowCondensed', 'bold')
-        doc.text('Descripción:', x + 3, textY)
-        doc.roundedRect(x + 2, textY + 1, 106, 10, 2, 2, 'S')
-        doc.setFont('BarlowCondensed', 'normal')
-        const descLines = doc.splitTextToSize(panel.description || '', colWidth - 4)
-        const descToDraw = descLines.slice(0, 2) // max 2 líneas por espacio
-        doc.text(descToDraw, x + 4, textY + 5)
+        if (showDescription) {
+          doc.setFont('BarlowCondensed', 'bold')
+          doc.text('Descripción:', x + 3, textY)
+          doc.roundedRect(x + 2, textY + 1, 106, 10, 2, 2, 'S')
+          doc.setFont('BarlowCondensed', 'normal')
+          const descLines = doc.splitTextToSize(panel.description || '', colWidth - 4)
+          const descToDraw = descLines.slice(0, 2)
+          doc.text(descToDraw, x + 4, textY + 5)
+          textY += 4.5
+        } else {
+          textY -= 1
+        }
 
-        //tamaño del texto de descripción
-        const descY = doc.getTextDimensions(descLines).h;
-
-        // Locución (Audio)
-        textY += 4.5
         doc.setFont('BarlowCondensed', 'bold')
-        doc.text('Locución / Letra:', x + 3, textY + 10)
-        doc.roundedRect(x + 2, textY + 11, 106, 10, 2, 2, 'S')
+        doc.text('Locución / Letra:', x + 3, textY + (showDescription ? 10 : 1))
+        doc.roundedRect(x + 2, textY + (showDescription ? 11 : 2), 106, showDescription ? 10 : 20, 2, 2, 'S')
         doc.setFont('BarlowCondensed', 'italic')
         const locLines = doc.splitTextToSize(locution || '', colWidth - 4)
-        const locToDraw = locLines.slice(0, 2) // max 2 líneas
-        doc.text(locToDraw, x + 4, textY + 15)
+        const locToDraw = locLines.slice(0, showDescription ? 2 : 4)
+        doc.text(locToDraw, x + 4, textY + (showDescription ? 15 : 6))
       }
     }
 
@@ -285,24 +295,24 @@ export const generateStoryboardPDF = async (storyboardName, panels, locutions, p
         doc.setFontSize(10)
         doc.setTextColor(60, 60, 60)
 
-        // Descripción
-        doc.setFont('BarlowCondensed', 'bold')
-        doc.text('Descripción:', x + 4, textY + 1)
-        doc.roundedRect(x + 2, textY + 2, 78, 10, 2, 2, 'S')
-        doc.setFont('BarlowCondensed', 'normal')
-        const descLines = doc.splitTextToSize(panel.description || '', colWidth - 10)
-        const descToDraw = descLines.slice(0, 2)
-        doc.text(descToDraw, x + 5, textY + 6)
+        if (showDescription) {
+          doc.setFont('BarlowCondensed', 'bold')
+          doc.text('Descripción:', x + 4, textY + 1)
+          doc.roundedRect(x + 2, textY + 2, 78, 10, 2, 2, 'S')
+          doc.setFont('BarlowCondensed', 'normal')
+          const descLines = doc.splitTextToSize(panel.description || '', colWidth - 10)
+          const descToDraw = descLines.slice(0, 2)
+          doc.text(descToDraw, x + 5, textY + 6)
+          textY += 10
+        }
 
-        // Locución
-        textY += 10
         doc.setFont('BarlowCondensed', 'bold')
-        doc.text('Locución / Letra:', x + 4, textY + 7)
-        doc.roundedRect(x + 2, textY + 9, 78, 10, 2, 2, 'S')
+        doc.text('Locución / Letra:', x + 4, textY + (showDescription ? 7 : 1))
+        doc.roundedRect(x + 2, textY + (showDescription ? 9 : 3), 78, showDescription ? 10 : 25, 2, 2, 'S')
         doc.setFont('BarlowCondensed', 'italic')
         const locLines = doc.splitTextToSize(locution || '', colWidth - 10)
-        const locToDraw = locLines.slice(0, 2)
-        doc.text(locToDraw, x + 5, textY + 13)
+        const locToDraw = locLines.slice(0, showDescription ? 2 : 4)
+        doc.text(locToDraw, x + 5, textY + (showDescription ? 13 : 7))
       }
     }
 
