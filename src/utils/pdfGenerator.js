@@ -212,11 +212,11 @@ export const generateStoryboardPDF = async (storyboardName, panels, locutions, p
         textY += 4.5
         doc.setFont('BarlowCondensed', 'bold')
         doc.text('Locución / Letra:', x + 3, textY + 10)
-        doc.roundedRect(x + 2, textY + 11, 106, 10, 2, 2, 'S')
+        doc.roundedRect(x + 2, textY + 1, 106, 10, 2, 2, 'S')
         doc.setFont('BarlowCondensed', 'italic')
         const locLines = doc.splitTextToSize(locution || '', colWidth - 4)
         const locToDraw = locLines.slice(0, 2) // max 2 líneas
-        doc.text(locToDraw, x + 4, textY + 15)
+        doc.text(locToDraw, x + 4, textY + 5)
       }
     }
 
@@ -298,11 +298,11 @@ export const generateStoryboardPDF = async (storyboardName, panels, locutions, p
         textY += 10
         doc.setFont('BarlowCondensed', 'bold')
         doc.text('Locución / Letra:', x + 4, textY + 7)
-        doc.roundedRect(x + 2, textY + 9, 78, 10, 2, 2, 'S')
+        doc.roundedRect(x + 2, textY + 2, 78, 10, 2, 2, 'S')
         doc.setFont('BarlowCondensed', 'italic')
         const locLines = doc.splitTextToSize(locution || '', colWidth - 10)
         const locToDraw = locLines.slice(0, 2)
-        doc.text(locToDraw, x + 5, textY + 13)
+        doc.text(locToDraw, x + 5, textY + 6)
       }
     }
 
